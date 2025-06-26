@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Slack,
@@ -47,42 +47,48 @@ export default function FloatingIcons() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Calculate side Y positions stacked vertically centered
   const getSideY = (i: number, total: number) => {
     const totalHeight = (total - 1) * verticalGap;
     return windowSize.height / 2 - totalHeight / 2 + i * verticalGap;
   };
 
-  // Center position (all icons overlap exactly at center)
   const centerPos = {
     x: windowSize.width / 2,
     y: windowSize.height / 2,
   };
 
+  const baseTransition = {
+    type: "spring",
+    mass: 0.6,
+    stiffness: 70,
+    damping: 22,
+  };
+
   return (
     <div className="fixed inset-0 pointer-events-none select-none z-10">
-      {/* Left icons */}
-      {leftIcons.map(({ Icon, color, size }, i) => {
-        const sideX = 40;
-        const sideY = getSideY(i, leftIcons.length);
-
-        // Animate to center and hidden on scroll down
+      {[...leftIcons, ...rightIcons].map(({ Icon, color, size }, i) => {
+        const isLeft = i < 5;
+        const sideX = isLeft ? 40 : windowSize.width - 40;
+        const sideY = getSideY(isLeft ? i : i - 5, 5);
         const isScrollingDown = scrollDirection === "down";
 
         return (
           <motion.div
-            key={"left-" + i}
+            key={i}
             initial={false}
             animate={{
               x: isScrollingDown ? centerPos.x : sideX,
               y: isScrollingDown ? centerPos.y : sideY,
               opacity: isScrollingDown ? 0 : 1,
-              scale: isScrollingDown ? 0.3 : 1,
+              scale: isScrollingDown ? 0.2 : 1,
               zIndex: isScrollingDown ? 0 : 20,
               filter: isScrollingDown ? "blur(4px)" : "blur(0px)",
             }}
-            transition={{ type: "spring", stiffness: 100, damping: 25, delay: isScrollingDown ? i * 0.05 : 0 }}
-            className={`absolute rounded-full shadow-lg flex items-center justify-center cursor-pointer ${color}`}
+            transition={{
+              ...baseTransition,
+              delay: isScrollingDown ? i * 0.07 : (10 - i) * 0.04,
+            }}
+            className={`absolute ${color} rounded-full shadow-lg flex items-center justify-center cursor-pointer`}
             style={{
               width: size,
               height: size,
@@ -90,42 +96,12 @@ export default function FloatingIcons() {
               left: 0,
               willChange: "transform, opacity, filter",
             }}
-            whileHover={{ scale: 1.2, opacity: 1, filter: "blur(0px)", zIndex: 30 }}
-          >
-            <Icon className="text-white" size={size * 0.5} />
-          </motion.div>
-        );
-      })}
-
-      {/* Right icons */}
-      {rightIcons.map(({ Icon, color, size }, i) => {
-        const sideX = windowSize.width - 40;
-        const sideY = getSideY(i, rightIcons.length);
-
-        const isScrollingDown = scrollDirection === "down";
-
-        return (
-          <motion.div
-            key={"right-" + i}
-            initial={false}
-            animate={{
-              x: isScrollingDown ? centerPos.x : sideX,
-              y: isScrollingDown ? centerPos.y : sideY,
-              opacity: isScrollingDown ? 0 : 1,
-              scale: isScrollingDown ? 0.3 : 1,
-              zIndex: isScrollingDown ? 0 : 20,
-              filter: isScrollingDown ? "blur(4px)" : "blur(0px)",
+            whileHover={{
+              scale: isScrollingDown ? 0.2 : 1.15,
+              filter: "blur(0px)",
+              zIndex: 30,
+              transition: { duration: 0.2 },
             }}
-            transition={{ type: "spring", stiffness: 100, damping: 25, delay: isScrollingDown ? i * 0.05 : 0 }}
-            className={`absolute rounded-full shadow-lg flex items-center justify-center cursor-pointer ${color}`}
-            style={{
-              width: size,
-              height: size,
-              top: 0,
-              left: 0,
-              willChange: "transform, opacity, filter",
-            }}
-            whileHover={{ scale: 1.2, opacity: 1, filter: "blur(0px)", zIndex: 30 }}
           >
             <Icon className="text-white" size={size * 0.5} />
           </motion.div>
