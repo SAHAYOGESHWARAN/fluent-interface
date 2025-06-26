@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { motion, useDragControls } from 'framer-motion';
 import { 
@@ -64,6 +63,7 @@ const FloatingIcons = () => {
           cursor-grab active:cursor-grabbing
           hidden lg:flex
         `}
+        style={{ filter: 'none' }} // Remove blur effect
         initial={{ 
           opacity: 0.15,
           scale: 1,
@@ -125,8 +125,7 @@ const FloatingIcons = () => {
 
   return (
     <div ref={containerRef} className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {/* Desktop version with draggable icons */}
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto overflow-y-auto h-full w-full">
         {icons.map((iconProps, index) => (
           <DraggableIcon key={`desktop-${index}`} {...iconProps} index={index} />
         ))}
