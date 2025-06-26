@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
-import { motion, useDragControls } from 'framer-motion';
-import { 
-  Slack, 
-  FileText, 
+"use client";
+
+import React, { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
+import {
+  Slack,
+  FileText,
   FileImage,
   Youtube,
   Database,
@@ -10,208 +12,125 @@ import {
   Palette,
   Globe,
   Zap,
-  GitBranch
-} from 'lucide-react';
-import { useScrollDirection } from '../hooks/useScrollDirection';
+  GitBranch,
+} from "lucide-react";
+import { useScrollDirection } from "../hooks/useScrollDirection";
 
-const FloatingIcons = () => {
+const icons = [
+  { Icon: Slack, color: "bg-purple-600", size: 56 },
+  { Icon: FileText, color: "bg-red-600", size: 48 },
+  { Icon: FileImage, color: "bg-blue-600", size: 48 },
+  { Icon: Youtube, color: "bg-green-600", size: 56 },
+  { Icon: Database, color: "bg-indigo-600", size: 48 },
+  { Icon: Settings, color: "bg-gray-600", size: 48 },
+  { Icon: Palette, color: "bg-pink-600", size: 48 },
+  { Icon: Globe, color: "bg-cyan-600", size: 48 },
+  { Icon: Zap, color: "bg-yellow-500", size: 56 },
+  { Icon: GitBranch, color: "bg-orange-600", size: 48 },
+];
+
+const verticalGap = 110;
+
+export default function FloatingIcons() {
   const scrollDirection = useScrollDirection();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
-  const icons = [
-    { Icon: Slack, color: 'bg-purple-500', position: 'top-16 left-16', delay: '0s', size: 'w-12 h-12' },
-    { Icon: FileText, color: 'bg-red-500', position: 'top-24 right-20', delay: '1s', size: 'w-10 h-10' },
-    { Icon: FileImage, color: 'bg-blue-500', position: 'top-48 left-32', delay: '2s', size: 'w-10 h-10' },
-    { Icon: Youtube, color: 'bg-green-500', position: 'bottom-32 right-16', delay: '3s', size: 'w-12 h-12' },
-    { Icon: Database, color: 'bg-indigo-500', position: 'bottom-48 left-20', delay: '4s', size: 'w-10 h-10' },
-    { Icon: Settings, color: 'bg-gray-500', position: 'top-64 right-32', delay: '5s', size: 'w-10 h-10' },
-    { Icon: Palette, color: 'bg-pink-500', position: 'bottom-64 right-48', delay: '1.5s', size: 'w-10 h-10' },
-    { Icon: Globe, color: 'bg-cyan-500', position: 'top-80 left-48', delay: '2.5s', size: 'w-10 h-10' },
-    { Icon: Zap, color: 'bg-yellow-500', position: 'bottom-20 left-64', delay: '3.5s', size: 'w-12 h-12' },
-    { Icon: GitBranch, color: 'bg-orange-500', position: 'bottom-80 right-64', delay: '4.5s', size: 'w-10 h-10' },
-  ];
+  const leftIcons = icons.slice(0, 5);
+  const rightIcons = icons.slice(5);
 
-  const getScrollBasedPosition = (index: number) => {
-    if (scrollDirection === 'up') {
-      // Move icons towards the center (drag box area)
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      const offset = 100 + (index * 20); // Spread them around the center
-      const angle = (index * 36) * (Math.PI / 180); // 36 degrees apart
-      
-      return {
-        x: centerX + Math.cos(angle) * offset - centerX,
-        y: centerY + Math.sin(angle) * offset - centerY,
-      };
+  useEffect(() => {
+    function updateSize() {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     }
-    return { x: 0, y: 0 }; // Original position
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  // Calculate side Y positions stacked vertically centered
+  const getSideY = (i: number, total: number) => {
+    const totalHeight = (total - 1) * verticalGap;
+    return windowSize.height / 2 - totalHeight / 2 + i * verticalGap;
   };
 
-  const DraggableIcon = ({ Icon, color, position, delay, size, index }: any) => {
-    const dragControls = useDragControls();
-    const scrollPosition = getScrollBasedPosition(index);
-
-    return (
-      <motion.div
-        key={index}
-        className={`
-          absolute ${position} ${size}
-          ${color} rounded-2xl shadow-lg
-          flex items-center justify-center
-          opacity-15 hover:opacity-80
-          transition-opacity duration-300
-          cursor-grab active:cursor-grabbing
-          hidden lg:flex
-        `}
-        style={{ filter: 'none' }} // Remove blur effect
-        initial={{ 
-          opacity: 0.15,
-          scale: 1,
-          x: 0,
-          y: 0,
-        }}
-        animate={{ 
-          y: scrollDirection ? [scrollPosition.y, scrollPosition.y - 10, scrollPosition.y - 5, scrollPosition.y - 15, scrollPosition.y] : [0, -10, -5, -15, 0],
-          x: scrollPosition.x,
-          rotate: [0, 1, -1, 0.5, 0],
-          opacity: 0.15,
-        }}
-        transition={{
-          y: {
-            duration: 8 + Math.random() * 4,
-            repeat: Infinity,
-            delay: parseFloat(delay),
-            ease: "easeInOut"
-          },
-          x: {
-            duration: 1.2,
-            ease: "easeInOut"
-          }
-        }}
-        whileHover={{ 
-          opacity: 0.8, 
-          scale: 1.1,
-          transition: { duration: 0.2 }
-        }}
-        whileDrag={{ 
-          opacity: 1, 
-          scale: 1.2,
-          zIndex: 50,
-          transition: { duration: 0.1 }
-        }}
-        drag
-        dragControls={dragControls}
-        dragConstraints={{
-          top: -window.innerHeight / 2,
-          left: -window.innerWidth / 2,
-          right: window.innerWidth / 2,
-          bottom: window.innerHeight / 2,
-        }}
-        dragElastic={0.1}
-        onDragStart={() => {
-          console.log(`Dragging ${Icon.name} icon`);
-        }}
-        onDragEnd={(event, info) => {
-          console.log(`Dropped ${Icon.name} icon at:`, info.point);
-        }}
-        onClick={() => {
-          console.log(`Clicked ${Icon.name} icon`);
-        }}
-      >
-        <Icon className="w-1/2 h-1/2 text-white" />
-      </motion.div>
-    );
+  // Center position (all icons overlap exactly at center)
+  const centerPos = {
+    x: windowSize.width / 2,
+    y: windowSize.height / 2,
   };
 
   return (
-    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="pointer-events-auto overflow-y-auto h-full w-full">
-        {icons.map((iconProps, index) => (
-          <DraggableIcon key={`desktop-${index}`} {...iconProps} index={index} />
-        ))}
-      </div>
-      
-      {/* Tablet version */}
-      <div className="hidden md:flex lg:hidden pointer-events-auto">
-        {icons.slice(0, 6).map(({ Icon, color, delay }, index) => (
+    <div className="fixed inset-0 pointer-events-none select-none z-10">
+      {/* Left icons */}
+      {leftIcons.map(({ Icon, color, size }, i) => {
+        const sideX = 40;
+        const sideY = getSideY(i, leftIcons.length);
+
+        // Animate to center and hidden on scroll down
+        const isScrollingDown = scrollDirection === "down";
+
+        return (
           <motion.div
-            key={`tablet-${index}`}
-            className={`
-              absolute w-10 h-10 ${color} rounded-xl shadow-md
-              flex items-center justify-center
-              opacity-20 hover:opacity-60
-              cursor-pointer
-              ${index === 0 ? 'top-20 left-12' : ''}
-              ${index === 1 ? 'top-32 right-12' : ''}
-              ${index === 2 ? 'top-48 left-16' : ''}
-              ${index === 3 ? 'bottom-48 right-16' : ''}
-              ${index === 4 ? 'bottom-32 left-12' : ''}
-              ${index === 5 ? 'bottom-20 right-12' : ''}
-            `}
+            key={"left-" + i}
+            initial={false}
             animate={{
-              y: [0, -8, -4, -12, 0],
-              rotate: [0, 0.5, -0.5, 0.25, 0],
+              x: isScrollingDown ? centerPos.x : sideX,
+              y: isScrollingDown ? centerPos.y : sideY,
+              opacity: isScrollingDown ? 0 : 1,
+              scale: isScrollingDown ? 0.3 : 1,
+              zIndex: isScrollingDown ? 0 : 20,
+              filter: isScrollingDown ? "blur(4px)" : "blur(0px)",
             }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              delay: parseFloat(delay),
-              ease: "easeInOut"
+            transition={{ type: "spring", stiffness: 100, damping: 25, delay: isScrollingDown ? i * 0.05 : 0 }}
+            className={`absolute rounded-full shadow-lg flex items-center justify-center cursor-pointer ${color}`}
+            style={{
+              width: size,
+              height: size,
+              top: 0,
+              left: 0,
+              willChange: "transform, opacity, filter",
             }}
-            whileHover={{ 
-              opacity: 0.6, 
-              scale: 1.1,
-              transition: { duration: 0.2 }
-            }}
-            onClick={() => {
-              console.log(`Clicked ${Icon.name} icon (tablet)`);
-            }}
+            whileHover={{ scale: 1.2, opacity: 1, filter: "blur(0px)", zIndex: 30 }}
           >
-            <Icon className="w-5 h-5 text-white" />
+            <Icon className="text-white" size={size * 0.5} />
           </motion.div>
-        ))}
-      </div>
-      
-      {/* Mobile simplified version */}
-      <div className="md:hidden pointer-events-auto">
-        {icons.slice(0, 4).map(({ Icon, color, delay }, index) => (
+        );
+      })}
+
+      {/* Right icons */}
+      {rightIcons.map(({ Icon, color, size }, i) => {
+        const sideX = windowSize.width - 40;
+        const sideY = getSideY(i, rightIcons.length);
+
+        const isScrollingDown = scrollDirection === "down";
+
+        return (
           <motion.div
-            key={`mobile-${index}`}
-            className={`
-              absolute w-8 h-8 ${color} rounded-lg shadow-md
-              flex items-center justify-center
-              opacity-25 hover:opacity-50
-              cursor-pointer
-              ${index === 0 ? 'top-24 left-6' : ''}
-              ${index === 1 ? 'top-32 right-6' : ''}
-              ${index === 2 ? 'bottom-32 left-6' : ''}
-              ${index === 3 ? 'bottom-24 right-6' : ''}
-            `}
+            key={"right-" + i}
+            initial={false}
             animate={{
-              y: [0, -6, -3, -9, 0],
-              rotate: [0, 0.3, -0.3, 0.15, 0],
+              x: isScrollingDown ? centerPos.x : sideX,
+              y: isScrollingDown ? centerPos.y : sideY,
+              opacity: isScrollingDown ? 0 : 1,
+              scale: isScrollingDown ? 0.3 : 1,
+              zIndex: isScrollingDown ? 0 : 20,
+              filter: isScrollingDown ? "blur(4px)" : "blur(0px)",
             }}
-            transition={{
-              duration: 12,
-              repeat: Infinity,
-              delay: parseFloat(delay),
-              ease: "easeInOut"
+            transition={{ type: "spring", stiffness: 100, damping: 25, delay: isScrollingDown ? i * 0.05 : 0 }}
+            className={`absolute rounded-full shadow-lg flex items-center justify-center cursor-pointer ${color}`}
+            style={{
+              width: size,
+              height: size,
+              top: 0,
+              left: 0,
+              willChange: "transform, opacity, filter",
             }}
-            whileHover={{ 
-              opacity: 0.5, 
-              scale: 1.05,
-              transition: { duration: 0.2 }
-            }}
-            onClick={() => {
-              console.log(`Clicked ${Icon.name} icon (mobile)`);
-            }}
+            whileHover={{ scale: 1.2, opacity: 1, filter: "blur(0px)", zIndex: 30 }}
           >
-            <Icon className="w-4 h-4 text-white" />
+            <Icon className="text-white" size={size * 0.5} />
           </motion.div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
-};
-
-export default FloatingIcons;
+}

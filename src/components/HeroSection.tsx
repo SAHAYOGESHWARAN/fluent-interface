@@ -22,7 +22,7 @@ const HeroSection = () => {
         <FeedbackZone />
         
         <div className="mt-12 text-sm text-gray-400 flex items-center justify-center gap-2">
-          <span>tally</span>
+        
         </div>
       </div>
     </div>
